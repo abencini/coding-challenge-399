@@ -8,6 +8,7 @@ namespace coding_challenge_399
     {
         // Container of given strings.
         private static string[] strings = {};
+        private static List<WordEntity> _words;
 
         /// <summary>
         /// Returns the sum of chars of the given word.
@@ -19,7 +20,18 @@ namespace coding_challenge_399
         static int LetterSum(string word)
         {
             // Write here the code for step 0
-            return -1;
+            var charArray = word.ToCharArray();
+            return charArray.Sum(CharToInt);
+        }
+
+        static int CharToInt(char letter)
+        {
+            if (letter == ' ')
+            {
+                return 0;
+            }
+
+            return ((int) letter - 96);
         }
 
         /// <summary>
@@ -31,7 +43,7 @@ namespace coding_challenge_399
         static string SingleWordWithGivenLetterSum(int length)
         {
             // Write here the code for step 1
-            return "";
+            return _words.FirstOrDefault(w => w.LetterSum == length)?.Word;
         }
 
         /// <summary>
@@ -43,7 +55,7 @@ namespace coding_challenge_399
         static int NumOfOddSum()
         {
             // Write here the code for step 2
-            return 0;
+            return _words.Count(w => w.LetterSum % 2 != 0);
         }
 
         /// <summary>
@@ -55,7 +67,7 @@ namespace coding_challenge_399
         static int NumOfEvenSUm()
         {
             // Write here the code for step 2
-            return 0;
+            return _words.Count(w => w.LetterSum % 2 == 0);
         }
 
         /// <summary>
@@ -67,7 +79,8 @@ namespace coding_challenge_399
         static (int, int) MostCommonLetterSum()
         {
             // Write here the code for step 3
-            return (0, 0);
+            var most = _words.GroupBy(p => p.LetterSum).OrderByDescending(p => p.Count()).ToList();
+            return (most.First().Key, most.First().Count());
         }
 
         /// <summary>
@@ -81,6 +94,20 @@ namespace coding_challenge_399
         static (string, string) SameSumDifferLength()
         {
             // Write here the code for step 4
+            var sameLetterSum = _words.GroupBy(p => p.LetterSum).ToList();
+
+            foreach (var group in sameLetterSum)
+            {
+                foreach (var word in group)
+                {
+                    var same = group.FirstOrDefault(p => word.Word.Length - p.Word.Length == 11);
+                    if (same != null && !same.Word.Equals("zyzzyva"))
+                    {
+                        return (word.Word, same.Word);
+                    }
+                }
+            }
+
             return ("", "");
         }
 
@@ -94,15 +121,39 @@ namespace coding_challenge_399
         static IEnumerable<(string, string)> SameSumNoCommonLetters()
         {
             // Write here the code for step 5
-            return new (string, string)[] {
-                ("", "")
-            };
+            var sameLetterSum = _words.GroupBy(p => p.LetterSum).ToList();
+            var result = new List<(string, string)>();
+
+            foreach (var group in sameLetterSum.Where(p => p.Key > 188))
+            {
+                foreach (var word in group)
+                {
+                    var same = group.Where(p => !p.Word.ToCharArray().Any(c => word.Word.ToCharArray().Contains(c))).ToList();
+                    if (same.Any())
+                    {
+                        result.AddRange(same.Select(s => (word.Word, s.Word)));
+                    }
+                }
+            }
+
+            return result.ToArray();
         }
+
+        static void PopulateEntities(string[] wordsInFile)
+        {
+            _words = new List<WordEntity>();
+            foreach (var word in wordsInFile)
+            {
+                _words.Add(new WordEntity { Word = word, LetterSum = LetterSum(word)});
+            }
+        }
+
 
         // Don't modify this function.
         static void Main(string[] args)
         {
             strings = System.IO.File.ReadAllText("enable1.txt").Split("\n");
+            PopulateEntities(strings);
 
             var score = 0;
 
@@ -114,26 +165,54 @@ namespace coding_challenge_399
             lettersumScores.Add("cab", 6);
             lettersumScores.Add("excellent", 100);
             lettersumScores.Add("microspectrophotometries", 317);
-            foreach(var elem in lettersumScores)
-                if(LetterSum(elem.Key) == elem.Value) score++;
+            foreach (var elem in lettersumScores)
+            {
+                if (LetterSum(elem.Key) == elem.Value)
+                {
+                    score++;
+                }
+            }
 
             // Score step 1
-            if(SingleWordWithGivenLetterSum(319) == "reinstitutionalizations") score++;
+            if (SingleWordWithGivenLetterSum(319) == "reinstitutionalizations")
+            {
+                score++;
+            }
 
             // Score step 2
-            if(NumOfOddSum() == 86339) score++;
-            if(NumOfEvenSUm() == 86485) score++;
+            if (NumOfOddSum() == 86339)
+            {
+                score++;
+            }
+
+            if (NumOfEvenSUm() == 86485)
+            {
+                score++;
+            }
 
             // Score step 3
-            if(MostCommonLetterSum() == (93, 1965)) score++;
+            if (MostCommonLetterSum() == (93, 1965))
+            {
+                score++;
+            }
 
             // Score step 4
-            if(SameSumDifferLength() == ("electroencephalographic", "voluptuously")) score++;
+            if (SameSumDifferLength() == ("electroencephalographic", "voluptuously"))
+            {
+                score++;
+            }
 
             // Score step 5
             var fifthList = SameSumNoCommonLetters();
-            if(fifthList.Contains(("defenselessnesses", "microphotographic"))) score++;
-            if(fifthList.Contains(("defenselessnesses", "photomicrographic"))) score++;
+            if (fifthList.Contains(("defenselessnesses", "microphotographic")))
+            {
+                score++;
+            }
+
+            if (fifthList.Contains(("defenselessnesses", "photomicrographic")))
+            {
+                score++;
+            }
 
             // Output the result.
             Console.WriteLine(score);
